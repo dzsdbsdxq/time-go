@@ -1,4 +1,4 @@
-package server
+package server_v2
 
 import (
 	"fmt"
@@ -31,5 +31,7 @@ func TestServer(t *testing.T) {
 	h.Get("/uget", func(ctx *Context) {
 
 	})
+
+	h.Start(":8080")
 
 }

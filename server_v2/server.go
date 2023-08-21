@@ -1,4 +1,4 @@
-package server
+package server_v2
 
 import (
 	"net"
@@ -16,11 +16,18 @@ type Server interface {
 	// method 是 HTTP 方法
 	// path 是路由
 	// handleFunc 是你的业务逻辑
-	AddRoute(method string, path string, handleFunc HandleFunc)
+	//AddRoute(method string, path string, handleFunc HandleFunc)
 }
 
 type HTTPServer struct {
 	// addr string 创建的时候传递，而不是 Start 接收。这个都是可以的
+	*router
+}
+
+func NewHTTPServer() *HTTPServer {
+	return &HTTPServer{
+		router: newRouter(),
+	}
 }
 
 func (h *HTTPServer) ServeHTTP(writer http.ResponseWriter, request *http.Request) {
@@ -48,13 +55,8 @@ func (h *HTTPServer) Start(addr string) error {
 }
 
 func (h *HTTPServer) Post(path string, handleFunc HandleFunc) {
-	h.AddRoute(http.MethodPost, path, handleFunc)
+	h.addRoute(http.MethodPost, path, handleFunc)
 }
 func (h *HTTPServer) Get(path string, handleFunc HandleFunc) {
-	h.AddRoute(http.MethodGet, path, handleFunc)
-}
-
-func (h *HTTPServer) AddRoute(method string, path string, handleFunc HandleFunc) {
-	//TODO implement me
-	//panic("implement me")
+	h.addRoute(http.MethodGet, path, handleFunc)
 }

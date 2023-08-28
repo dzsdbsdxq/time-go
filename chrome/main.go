@@ -8,14 +8,8 @@ import (
 	"time-go/chrome/edp"
 )
 
-type Result struct {
-	Name string
-	Mid  string
-	Url  string
-}
-
 func main() {
-	result := []Result{
+	result := []edp.Result{
 		{
 			Name: "孤勇者",
 			Mid:  "",
@@ -39,21 +33,22 @@ func main() {
 	//NewChromeRdp(ctx, 10*time.Second)
 	defer cancel()
 	var wg sync.WaitGroup
-	for i := 0; i < len(result)-1; i++ {
+	for i := 0; i <= len(result)-1; i++ {
 		wg.Add(1)
-		go func(name string) {
-
+		go func(i int, name string) {
 			s, _ := req.GetQQMusicMid(name, &wg)
-
 			result[i].Mid = s.Req0.Data.Body.Song.List[0].Mid
-
-		}(result[i].Name)
+		}(i, result[i].Name)
 	}
 	wg.Wait()
-	fmt.Println(result)
-	fmt.Println(rdp)
-	//rdp.OpenPlayerTag()
-	//select {}
+
+	for i := 0; i <= len(result)-1; i++ {
+		go rdp.OpenPlayerTag(result[i].Mid)
+	}
+	select {
+	case rr:
+
+	}
 
 }
 

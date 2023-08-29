@@ -6,7 +6,6 @@ import (
 	"github.com/imroc/req/v3"
 	"io"
 	"strconv"
-	"sync"
 	"time"
 )
 
@@ -27,8 +26,7 @@ func NewQQMusic() (*QQMusicClient, error) {
 	})
 	return cli, nil
 }
-func (cli *QQMusicClient) GetQQMusicMid(songName string, wg *sync.WaitGroup) (*QQMusicResponse, error) {
-	defer wg.Done()
+func (cli *QQMusicClient) GetQQMusicMid(songName string) (*QQMusicResponse, error) {
 	fmt.Println(songName)
 	bodyJsonString := `{"comm":  { "format": "json","inCharset": "utf-8","outCharset": "utf-8"},"req_0": {"method": "DoSearchForQQMusicDesktop","module": "music.search.SearchCgiService","param": {"remoteplace": "txt.mqq.all","query": "` + songName + `","page_num": 1,"num_per_page": 1}}}`
 	response := new(QQMusicResponse)

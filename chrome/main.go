@@ -36,7 +36,8 @@ func main() {
 	for i := 0; i <= len(result)-1; i++ {
 		wg.Add(1)
 		go func(i int, name string) {
-			s, _ := req.GetQQMusicMid(name, &wg)
+			defer wg.Done()
+			s, _ := req.GetQQMusicMid(name)
 			result[i].Mid = s.Req0.Data.Body.Song.List[0].Mid
 		}(i, result[i].Name)
 	}
@@ -46,7 +47,7 @@ func main() {
 		go rdp.OpenPlayerTag(result[i].Mid)
 	}
 	select {
-	case rr:
+	///case rr:
 
 	}
 

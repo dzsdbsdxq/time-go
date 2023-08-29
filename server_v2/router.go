@@ -63,6 +63,24 @@ func (r *router) addRoute(method, path string, handleFunc HandleFunc) {
 	root.handler = handleFunc
 }
 
+func (r *router) findRoute(method, path string) (*node, bool) {
+	root, ok := r.trees[method]
+	if !ok {
+		return nil, false
+	}
+	if path == "/" {
+		return root, true
+	}
+	seqs := strings.Split(strings.Trim(path, "/"), "/")
+	for _, seq := range seqs {
+		root, ok = root.childOf(seq)
+		if !ok {
+			return nil, false
+		}
+	}
+	return root, true
+}
+
 type node struct {
 	path string
 	//子 path到子节点的映射
@@ -71,6 +89,13 @@ type node struct {
 	handler HandleFunc
 }
 
+func (n *node) childOf(path string) (*node, bool) {
+	if n.children == nil {
+		return nil, false
+	}
+	res, ok := n.children[path]
+	return res, ok
+}
 func (n *node) childOrCreate(seq string) *node {
 	if n.children == nil {
 		n.children = make(map[string]*node, 1)

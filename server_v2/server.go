@@ -16,7 +16,7 @@ type Server interface {
 	// method 是 HTTP 方法
 	// path 是路由
 	// handleFunc 是你的业务逻辑
-	//AddRoute(method string, path string, handleFunc HandleFunc)
+	addRoute(method string, path string, handleFunc HandleFunc)
 }
 
 type HTTPServer struct {
@@ -39,7 +39,14 @@ func (h *HTTPServer) ServeHTTP(writer http.ResponseWriter, request *http.Request
 }
 
 func (h *HTTPServer) serve(ctx *Context) {
+	n, ok := h.findRoute(ctx.Req.Method, ctx.Req.URL.Path)
+	if !ok || n.handler == nil {
+		ctx.Resp.WriteHeader(404)
+		_, _ = ctx.Resp.Write([]byte("Not Found"))
 
+		return
+	}
+	n.handler(ctx)
 }
 
 func (h *HTTPServer) Start(addr string) error {

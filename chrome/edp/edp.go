@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-const QqCookies = "pac_uid=0_ef341d4a01879; iip=0; pgv_pvid=5878963178; RK=0tuhRsENRj; ptcz=60a7f94bb84396401068c8e78e689f61260930054701d917e41739ac510de5d1; _clck=ofj9qx|1|fdz|0; fqm_pvqid=8fd1c33e-3019-4969-a1dd-823517e3ffbd; fqm_sessionid=0160e91e-22fb-498f-9635-0099bb277fd9; pgv_info=ssid=s9545860213; ts_refer=i.y.qq.com/; ts_uid=9193355500; music_ignore_pskey=202306271436Hn@vBj; ts_last=i.y.qq.com/v8/playsong.html; ts_refer=ADTAGryqq.songDetail; ts_uid=9193355500; ts_last=y.qq.com/n/ryqq/songDetail/003UkWuI0E8U0l; login_type=1; psrf_qqunionid=0214AE5747295CDBD218E2BB9BF7CC8E; tmeLoginType=2; qqmusic_key=Q_H_L_5Q-Stp_kJro6En85IKVDznbDpj_qQdkFHFMsh2H97nsjkJ7mP2vQpfg; qm_keyst=Q_H_L_5Q-Stp_kJro6En85IKVDznbDpj_qQdkFHFMsh2H97nsjkJ7mP2vQpfg; psrf_qqopenid=0A5FC04A1C80543131CCBB8CBDF13A1C; psrf_qqaccess_token=61C0D2D26920F0A856D7DD6EB97673F6; psrf_access_token_expiresAt=1701007041; euin=oKoi7K-P7e4l7v**; uin=1335244575; wxrefresh_token=; wxunionid=; psrf_qqrefresh_token=88AD9F4A0BAF1A87D88B8C90EF9EBFB1; wxopenid=; psrf_musickey_createtime=1693231041"
+const QqCookies = "pac_uid=0_ef341d4a01879; iip=0; pgv_pvid=5878963178; RK=0tuhRsENRj; ptcz=60a7f94bb84396401068c8e78e689f61260930054701d917e41739ac510de5d1; _clck=ofj9qx|1|fdz|0; fqm_pvqid=8fd1c33e-3019-4969-a1dd-823517e3ffbd; ts_uid=9193355500; music_ignore_pskey=202306271436Hn@vBj; ts_uid=9193355500; tmeLoginType=2; euin=oKoi7K-P7e4l7v**; ts_refer=ADTAGmyqq; fqm_sessionid=dfc068e1-7d57-45e7-bf18-606bcf5606b9; pgv_info=ssid=s8614525810; ts_last=y.qq.com/; ts_refer=music.qq.com/; ptui_loginuin=1335244575; login_type=1; psrf_qqunionid=0214AE5747295CDBD218E2BB9BF7CC8E; psrf_qqopenid=0A5FC04A1C80543131CCBB8CBDF13A1C; psrf_qqaccess_token=61C0D2D26920F0A856D7DD6EB97673F6; wxrefresh_token=; wxunionid=; psrf_musickey_createtime=1693318582; psrf_qqrefresh_token=88AD9F4A0BAF1A87D88B8C90EF9EBFB1; uin=1335244575; wxopenid=; qqmusic_key=Q_H_L_5-tSil0rlqxY46qjtEGtsdeMN-kGrVFhjU4qZN6wagGaR9anFTk5m8w; qm_keyst=Q_H_L_5-tSil0rlqxY46qjtEGtsdeMN-kGrVFhjU4qZN6wagGaR9anFTk5m8w; psrf_access_token_expiresAt=1701094582; ts_last=i.y.qq.com/n2/m/index.html"
 
 type ChromeRdp struct {
 	Ctx context.Context
@@ -47,7 +47,7 @@ func (cr *ChromeRdp) NewChromeRdp() (*ChromeRdp, context.CancelFunc) {
 		allocCtx,
 	)
 	//defer cancel()
-	ctx, cancel = context.WithTimeout(ctx, 5*time.Second)
+	ctx, cancel = context.WithTimeout(ctx, 15*time.Second)
 	cr.Ctx = ctx
 	return cr, cancel
 }
@@ -64,7 +64,7 @@ func (cr *ChromeRdp) ParseCookie() []*QQCookie {
 	return qc
 }
 
-func (cr *ChromeRdp) setCookies(cookies []*QQCookie, musicMid string) chromedp.Tasks {
+func (cr *ChromeRdp) setCookies(cookies []*QQCookie, result *Result) chromedp.Tasks {
 
 	return chromedp.Tasks{
 		network.Enable(),
@@ -86,14 +86,22 @@ func (cr *ChromeRdp) setCookies(cookies []*QQCookie, musicMid string) chromedp.T
 				switch ev := ev.(type) {
 				case *network.EventRequestWillBeSent:
 					if strings.Index(ev.Request.URL, "get_song_detail") != -1 {
-						fmt.Println(ev.Request.URL)
-						fmt.Println(ev.Request.PostData)
+						//fmt.Println(ev.Request.URL)
+						//fmt.Println(ev.Request.PostData)
+						go func() {
+							client, _ := NewQQMusic()
+							client.GetQQMusicDetail(result, ev.Request.URL, ev.Request.PostData)
+						}()
+
 					}
 					return
 				case *network.EventResponseReceived:
 					resp := ev.Response
-					//log.Printf("header:%d, %s", resp.Status, resp.URL)
+
+					log.Printf("%s:%d", resp.MimeType, resp.Status)
 					if resp.MimeType == "audio/mp4" {
+						//result.UrlChan <- resp.URL
+						result.Url = resp.URL
 						log.Printf("success:%d, %s", resp.Status, resp.URL)
 					}
 					return
@@ -102,18 +110,14 @@ func (cr *ChromeRdp) setCookies(cookies []*QQCookie, musicMid string) chromedp.T
 			return nil
 		}),
 		// 到网址
-		chromedp.Navigate(`https://i.y.qq.com/v8/playsong.html?songmid=` + musicMid),
+		chromedp.Navigate(`https://i.y.qq.com/v8/playsong.html?songmid=` + result.Mid),
 		chromedp.ActionFunc(func(ctx context.Context) error {
 			return chromedp.Cancel(ctx)
 		}),
 	}
 }
 
-func (cr *ChromeRdp) OpenPlayerTag(musicMid string) {
-	err := chromedp.Run(cr.Ctx, cr.setCookies(cr.ParseCookie(), musicMid))
-	if err != nil {
-		panic(err)
-		return
-	}
+func (cr *ChromeRdp) OpenPlayerTag(result *Result) {
+	chromedp.Run(cr.Ctx, cr.setCookies(cr.ParseCookie(), result))
 	fmt.Println("OpenPlayerTag cancel")
 }

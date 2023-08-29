@@ -1,11 +1,10 @@
 package edp
 
 type Result struct {
-	Name string
-	Mid  string
-	Url  string
-}
-type ResultUrl struct {
-	Index int
+	Name  string
+	Mid   string
 	Url   string
+	Lyric string
+	//LyricChan chan string
+	//UrlChan   chan string
 }

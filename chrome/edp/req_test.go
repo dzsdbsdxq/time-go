@@ -6,7 +6,7 @@ import (
 )
 
 func TestNewQQMusicRequest(t *testing.T) {
-	song := "孤勇者"
+	song := "会呼吸的痛"
 	req, err := NewQQMusic()
 	if err != nil {
 		panic(err)

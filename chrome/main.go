@@ -8,49 +8,31 @@ import (
 
 func main() {
 
-	//resultChan := make(chan edp.Result)
-	//defer close(resultChan)
 	result := []*edp.Result{
 		{
-			Name:  "孤勇者",
-			Mid:   "",
-			Url:   "",
-			Lyric: "",
-			//LyricChan: make(chan string),
-			//UrlChan:   make(chan string),
+			Name: "孤勇者",
 		},
 		{
-			Name:  "会呼吸的痛",
-			Mid:   "",
-			Url:   "",
-			Lyric: "",
-			//LyricChan: make(chan string),
-			//UrlChan:   make(chan string),
+			Name: "会呼吸的痛",
 		},
 	}
+	chromeRdp := edp.ChromeRdp{}
+
 	req, err := edp.NewQQMusic()
 	if err != nil {
 		panic(err)
 		return
 	}
 
-	//chromeRdp := edp.ChromeRdp{}
-	//rdp, cancel := chromeRdp.NewChromeRdp()
-	//defer cancel()
-
 	var wg sync.WaitGroup
 	for i := 0; i <= len(result)-1; i++ {
 		wg.Add(1)
-		go func(i int, name string) {
+		go func(res *edp.Result) {
 			defer wg.Done()
-			s, _ := req.GetQQMusicMid(name)
-			result[i].Mid = s.Req0.Data.Body.Song.List[0].Mid
-
-			chromeRdp := edp.ChromeRdp{}
-			rdp, _ := chromeRdp.NewChromeRdp()
-			rdp.OpenPlayerTag(result[i])
-
-		}(i, result[i].Name)
+			s, _ := req.GetQQMusicMid(res.Name)
+			res.Mid = s.Req0.Data.Body.Song.List[0].Mid
+			chromeRdp.NewChromeTab().OpenPlayerTag(res)
+		}(result[i])
 	}
 	wg.Wait()
 

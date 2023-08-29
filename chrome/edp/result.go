@@ -5,6 +5,4 @@ type Result struct {
 	Mid   string
 	Url   string
 	Lyric string
-	//LyricChan chan string
-	//UrlChan   chan string
 }
